@@ -1,4 +1,9 @@
-pub mod fixed_vector;
-pub mod hashset;
-pub mod min_heap;
-pub mod vector;
+mod fixed_vector;
+mod hashset;
+mod min_heap;
+mod vector;
+
+pub use fixed_vector::fixed_vector;
+pub use hashset::hashset;
+pub use min_heap::min_heap;
+pub use vector::vector;
