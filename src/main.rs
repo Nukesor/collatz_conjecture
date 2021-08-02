@@ -27,6 +27,7 @@ fn main() -> Result<()> {
     spawn_threads(counter, sender)?;
 
     algorithms::fixed_vector::fixed_vector(receiver)
+    //algorithms::fixed_vector::vector(receiver)
 }
 
 /// Spin up twice as many threads as there are logical cores.
