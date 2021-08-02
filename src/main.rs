@@ -1,6 +1,6 @@
-use std::cmp::Reverse;
+use std::collections::HashSet;
+use std::sync::Arc;
 use std::thread;
-use std::{collections::BinaryHeap, sync::Arc};
 
 use atomic::Atomic;
 use atomic::Ordering::Relaxed;
@@ -19,53 +19,69 @@ fn main() -> Result<()> {
     // Spawn the worker pool
     spawn_threads(counter, sender)?;
 
-    // This heap is used to store all numbers that can't be reached from 1 via the sequence of
-    // natural numbers yet. This happens, if we hit one especially hard number and the other
-    // threads solve a lot of problems in the meantime.
-    let mut backlog: BinaryHeap<Reverse<u128>> = BinaryHeap::new();
+    // This heap is used to store all numbers that haven't been solved yet.
+    // -> For instance, if the task for 10 completes, but 7, 8 and 9 haven't yet, these will be
+    //      added to the backlog.
+    //  In theory, there should never be more than `threadpool_count` elements in the backlog.
+    let mut backlog: HashSet<u128> = HashSet::new();
 
-    // This is used to store the next highest natural number, that's connected to 1 via the
-    // sequence of natural numbers.
-    let mut next_highest_number = DEFAULT_MAX_PROVEN_NUMBER;
+    let mut counter = 0;
+    let mut highest_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
+    // The highest number that's connected in the sequence of natural numbers from `(0..number)`.
+    let mut highest_sequential_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
+
     loop {
-        while let Ok(number) = receiver.recv() {
-            // Check if we got the next number in the sequence of natural numbers.
-            if number == next_highest_number + 1 {
-                next_highest_number = number;
-                println!("Checked number {:?}", next_highest_number);
-                // Once we get the next number, check if we find the following numbers in our,
-                // backlog as well.
-                loop {
-                    // Check if the next number exists
-                    if let Some(number) = backlog.peek() {
-                        // If the number checks out and is the next item in the sequence, we pop it
-                        // and set it as the new highest number.
-                        if number.0 == next_highest_number + 1 {
-                            next_highest_number = backlog.pop().expect("We just peeked it").0;
-                            println!("Checked number {:?}", next_highest_number);
-                        } else {
-                            // If it isn't, we just break and wait.
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            } else {
-                backlog.push(Reverse(number));
+        let number = receiver.recv()?;
+
+        if number > highest_number {
+            // Add all missing numbers that haven't been returned yet.
+            for i in highest_number + 1..number {
+                backlog.insert(i);
             }
+
+            // Set the new number as the highest number.
+            highest_number = number;
+        } else {
+            // The number should be in the backlog.
+            if !backlog.remove(&number) {
+                panic!("Got smaller number that isn't in backlog: {}", number);
+            };
         }
+
+        // We only print stuff every X iterations, as printing is super slow.
+        // We also only update the highest_sequential_number during this interval.
+        if counter == 5_000_000 {
+            // If there's still a backlog, the highest sequential number must be the smallest
+            // number in the backlog -1
+            if let Some(number) = backlog.iter().next() {
+                highest_sequential_number = number - 1;
+            } else {
+                highest_sequential_number = highest_number;
+            }
+
+            println!(
+                "max_number: {}, Channel size: {}, backlog size: {}",
+                highest_sequential_number,
+                receiver.len(),
+                backlog.len()
+            );
+
+            // Reset the counter
+            counter = 0;
+        }
+
+        counter += 1;
     }
 }
 
 /// Spin up twice as many threads as there are logical cores.
 fn spawn_threads(counter: Arc<Atomic<u128>>, sender: Sender<u128>) -> Result<()> {
     let cpus = num_cpus::get();
-    for _ in 0..cpus * 2 {
+    for thread_id in 0..cpus {
         let counter_clone = Arc::clone(&counter);
         let sender_clone = sender.clone();
-        thread::spawn(|| {
-            if let Err(error) = thread_logic(counter_clone, sender_clone) {
+        thread::spawn(move || {
+            if let Err(error) = thread_logic(thread_id, counter_clone, sender_clone) {
                 eprintln!("Got error in thread:\n{:?}", error);
             };
         });
@@ -76,7 +92,7 @@ fn spawn_threads(counter: Arc<Atomic<u128>>, sender: Sender<u128>) -> Result<()>
 
 /// The main logic of the thread.
 /// Check for circles and print a message if one is found.
-fn thread_logic(counter: Arc<Atomic<u128>>, sender: Sender<u128>) -> Result<()> {
+fn thread_logic(_thread: usize, counter: Arc<Atomic<u128>>, sender: Sender<u128>) -> Result<()> {
     loop {
         let next_number = counter.fetch_add(1, Relaxed);
         let found_circle = find_circle(next_number);

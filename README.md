@@ -13,10 +13,10 @@ At the start of the program, a worker pool with the size of `2 * logical threads
 
 ### Data Structures and Channels
 
-**Task Dequeue**
+**Atomic u128 counter**
 
-This queue is used to distribute tasks between the worker pool.
-Each worker is responsible to get the next task by itself, by simply popping the next element from the dequeue.
+This counter is used to distribute tasks in the worker pool.
+Each worker is responsible to get the next task by itself, by simply incrementing this counter.
 
 **Result Channel**
 
