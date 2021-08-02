@@ -10,6 +10,7 @@ use crate::{DEFAULT_MAX_PROVEN_NUMBER, THREAD_COUNT};
 /// This is value is simply a vector of zeros with the last bit flipped.
 static EMPTY_SLOT: u128 = 0;
 
+#[allow(dead_code)]
 pub fn fixed_vector(receiver: Receiver<u128>) -> Result<()> {
     // This is used to store all numbers that haven't been solved yet.
     // -> For instance, if the task for 10 completes, but 7, 8 and 9 haven't yet, these will be

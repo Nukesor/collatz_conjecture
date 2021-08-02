@@ -1,15 +1,17 @@
+use std::collections::HashSet;
+
 use color_eyre::eyre::Result;
 use crossbeam::channel::Receiver;
 
 use crate::DEFAULT_MAX_PROVEN_NUMBER;
 
 #[allow(dead_code)]
-pub fn vector(receiver: Receiver<u128>) -> Result<()> {
-    // This is used to store all numbers that haven't been solved yet.
+pub fn hashset(receiver: Receiver<u128>) -> Result<()> {
+    // This heap is used to store all numbers that haven't been solved yet.
     // -> For instance, if the task for 10 completes, but 7, 8 and 9 haven't yet, these will be
     //      added to the backlog.
     //  In theory, there should never be more than `threadpool_count` elements in the backlog.
-    let mut backlog: Vec<u128> = Vec::new();
+    let mut backlog: HashSet<u128> = HashSet::new();
 
     let mut counter = 0;
     let mut highest_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
@@ -22,19 +24,16 @@ pub fn vector(receiver: Receiver<u128>) -> Result<()> {
         if number > highest_number {
             // Add all missing numbers that haven't been returned yet.
             for i in highest_number + 1..number {
-                backlog.push(i);
+                backlog.insert(i);
             }
 
             // Set the new number as the highest number.
             highest_number = number;
         } else {
             // The number should be in the backlog.
-            for i in 0..backlog.len() {
-                if backlog[i] == number {
-                    backlog.remove(i);
-                    break;
-                }
-            }
+            if !backlog.remove(&number) {
+                panic!("Got smaller number that isn't in backlog: {}", number);
+            };
         }
 
         // We only print stuff every X iterations, as printing is super slow.
