@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::sync::Arc;
 use std::thread;
 
@@ -8,6 +7,19 @@ use color_eyre::eyre::Result;
 use crossbeam::channel::{unbounded, Sender};
 
 static DEFAULT_MAX_PROVEN_NUMBER: u128 = 2u128.pow(64);
+
+/// We have to implement our own non-moving vector, since the backlog is by far the slowest part of
+/// the main thread. Without some kind of special datastructure, we're quickly accumulating a lot
+/// of messages in our mpsc channel.
+///
+/// This is value is simply a vector of zeros with the last bit flipped.
+static EMPTY_SLOT: u128 = 0;
+
+/// The amount of threads that should be started.
+///
+/// This is at the same time the amount of slots in the backlog.
+/// In theory, we'll never need more backlog slots than there are threads.
+static THREAD_COUNT: usize = 24;
 
 fn main() -> Result<()> {
     // A thread-safe atomic counter.
@@ -23,7 +35,7 @@ fn main() -> Result<()> {
     // -> For instance, if the task for 10 completes, but 7, 8 and 9 haven't yet, these will be
     //      added to the backlog.
     //  In theory, there should never be more than `threadpool_count` elements in the backlog.
-    let mut backlog: Vec<u128> = Vec::new();
+    let mut backlog: Vec<u128> = vec![EMPTY_SLOT; THREAD_COUNT];
 
     let mut counter = 0;
     let mut highest_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
@@ -31,21 +43,31 @@ fn main() -> Result<()> {
     let mut highest_sequential_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
 
     loop {
-        let number = receiver.recv()?;
+        let next_number = receiver.recv()?;
 
-        if number > highest_number {
+        if next_number > highest_number {
             // Add all missing numbers that haven't been returned yet.
-            for i in highest_number + 1..number {
-                backlog.push(i);
+            let mut backlog_slot_iter = 0..THREAD_COUNT;
+            for missing in highest_number + 1..next_number {
+                // Scan the vector for free slots (slots with 0)
+                // By using a stateful-vector, we only do a single scan for multiple missing
+                // elements.
+                while let Some(slot) = backlog_slot_iter.next() {
+                    let value = backlog[slot];
+                    if value == 0 {
+                        backlog[slot] = missing;
+                        break;
+                    }
+                }
             }
 
             // Set the new number as the highest number.
-            highest_number = number;
+            highest_number = next_number;
         } else {
-            // The number should be in the backlog.
+            // The number must be in the backlog.
             for i in 0..backlog.len() {
-                if backlog[i] == number {
-                    backlog.remove(i);
+                if backlog[i] == next_number {
+                    backlog[i] = 0;
                     break;
                 }
             }
@@ -54,12 +76,14 @@ fn main() -> Result<()> {
         // We only print stuff every X iterations, as printing is super slow.
         // We also only update the highest_sequential_number during this interval.
         if counter == 5_000_000 {
-            // If there's still a backlog, the highest sequential number must be the smallest
-            // number in the backlog -1
-            if let Some(number) = backlog.iter().next() {
-                highest_sequential_number = number - 1;
-            } else {
-                highest_sequential_number = highest_number;
+            // Find the smallest number in our backlog.
+            // That number minus 1 is our last succesfully calculated value.
+            backlog.sort();
+            for i in backlog.iter() {
+                if i == &0 {
+                    continue;
+                }
+                highest_sequential_number = i - 1;
             }
 
             println!(
