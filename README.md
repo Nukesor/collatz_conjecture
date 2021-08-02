@@ -48,10 +48,14 @@ That way, we know how far we were able to compute results and know where to cont
 Interestingly, storing these intermediate results turns out to be quite a problem.
 
 A few variables:
+
 - `HIGHEST_SEQUENTIAL_NUMBER` The last number in the sequence of natural numbers, that was proven to not be cyclic.
 - `HIGHEST_NUMBER` The highest number that was was returned from any thread at the current time.
 - `result backlog` The collection that contains all numbers that haven't been processed yet.
 - `channel backlog` The amount of messages that accumulate in the mpsc channel, as the main thread cannot keep up.
+
+All results below have been made with a threadcount of `logical cpus - 1`.
+That way the main thread still got one processor exclusively.
 
 #### MinHeap
 
@@ -82,11 +86,10 @@ The main thread was just not capable of keeping up with the influx of numbers.
 The third iteration took the same approach as before, but a simpler datastructure was utilized. \
 As we know, that the amount of slots in our result backlog are rather manageable, a binary tree might just be overkill.
 
-It turns out, that this works quite fine with 12 concurrent threads, but also fails for 24 threads.
+It turns out, that this works quite fine.
 
 However, an interesting phenomenon could be observed.
 Over the course of a few hours, the channel backlog sometimes rapidly increased (up to several hundred million entries), until it finally hit a point at which the main thread started to catch up.
-
 
 #### Vec with fixed size
 
@@ -100,4 +103,4 @@ Adding values to the vector was always a `O(n)` linear scan worst-case scenario.
 However it was also `O(n)` for multiple items, which is neat.
 
 Removing items resulted in a linear scan `O(n)` with an `O(1)` deletion operation (insert `0`).
-In theory, this should have been a bit faster.
+In theory, this should have been a bit faster. In practice, there wasn't much of a difference.

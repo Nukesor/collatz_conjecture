@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, time::Instant};
 
 use color_eyre::eyre::Result;
 use crossbeam::channel::Receiver;
@@ -13,11 +13,12 @@ pub fn hashset(receiver: Receiver<u128>) -> Result<()> {
     //  In theory, there should never be more than `threadpool_count` elements in the backlog.
     let mut backlog: HashSet<u128> = HashSet::new();
 
-    let mut counter = 0;
     let mut highest_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
     // The highest number that's connected in the sequence of natural numbers from `(0..number)`.
     let mut highest_sequential_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
 
+    let mut counter = 0;
+    let start = Instant::now();
     loop {
         let number = receiver.recv()?;
 
@@ -38,7 +39,7 @@ pub fn hashset(receiver: Receiver<u128>) -> Result<()> {
 
         // We only print stuff every X iterations, as printing is super slow.
         // We also only update the highest_sequential_number during this interval.
-        if counter == 5_000_000 {
+        if counter % 5_000_000 == 0 {
             // If there's still a backlog, the highest sequential number must be the smallest
             // number in the backlog -1
             if let Some(number) = backlog.iter().next() {
@@ -48,14 +49,13 @@ pub fn hashset(receiver: Receiver<u128>) -> Result<()> {
             }
 
             println!(
-                "max_number: {}, Channel size: {}, backlog size: {}",
+                "iteration: {}, time: {}, max_number: {}, channel size: {}, backlog size: {}",
+                counter,
+                start.elapsed().as_secs(),
                 highest_sequential_number,
                 receiver.len(),
                 backlog.len()
             );
-
-            // Reset the counter
-            counter = 0;
         }
 
         counter += 1;

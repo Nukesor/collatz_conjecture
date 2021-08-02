@@ -14,7 +14,7 @@ static DEFAULT_MAX_PROVEN_NUMBER: u128 = 2u128.pow(64);
 ///
 /// This is at the same time the amount of slots in the backlog.
 /// In theory, we'll never need more backlog slots than there are threads.
-static THREAD_COUNT: usize = 24;
+static THREAD_COUNT: usize = 11;
 
 fn main() -> Result<()> {
     // A thread-safe atomic counter.
@@ -26,10 +26,10 @@ fn main() -> Result<()> {
     // Spawn the worker pool
     spawn_threads(counter, sender)?;
 
-    algorithms::fixed_vector(receiver)
-    //algorithms::vector(receiver)
-    //algorithms::hashset(receiver)
     //algorithms::min_heap(receiver)
+    //algorithms::hashset(receiver)
+    //algorithms::vector(receiver)
+    algorithms::fixed_vector(receiver)
 }
 
 /// Spin up twice as many threads as there are logical cores.

@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use color_eyre::eyre::Result;
 use crossbeam::channel::Receiver;
 
@@ -23,6 +25,7 @@ pub fn fixed_vector(receiver: Receiver<u128>) -> Result<()> {
     let mut highest_sequential_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
 
     let mut counter = 0;
+    let start = Instant::now();
     loop {
         let next_number = receiver.recv()?;
 
@@ -56,7 +59,7 @@ pub fn fixed_vector(receiver: Receiver<u128>) -> Result<()> {
 
         // We only print stuff every X iterations, as printing is super slow.
         // We also only update the highest_sequential_number during this interval.
-        if counter == 5_000_000 {
+        if counter % 5_000_000 == 0 {
             // Find the smallest number in our backlog.
             // That number minus 1 is our last succesfully calculated value.
             backlog.sort();
@@ -68,14 +71,13 @@ pub fn fixed_vector(receiver: Receiver<u128>) -> Result<()> {
             }
 
             println!(
-                "max_number: {}, Channel size: {}, backlog size: {}",
+                "Iteration: {}, time: {}, max_number: {}, Channel size: {}, backlog size: {}",
+                counter,
+                start.elapsed().as_secs(),
                 highest_sequential_number,
                 receiver.len(),
                 backlog.len()
             );
-
-            // Reset the counter
-            counter = 0;
         }
 
         counter += 1;

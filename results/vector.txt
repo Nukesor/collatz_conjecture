@@ -1,30 +1,29 @@
 Vec normal:
-max_number: 18446744073714534918, Channel size: 6129124, backlog size: 23
-max_number: 18446744073719470924, Channel size: 10975251, backlog size: 23
-max_number: 18446744073724540323, Channel size: 16328484, backlog size: 23
-max_number: 18446744073729521792, Channel size: 22737851, backlog size: 23
-max_number: 18446744073734522135, Channel size: 28994141, backlog size: 22
-max_number: 18446744073739537906, Channel size: 34994805, backlog size: 23
-max_number: 18446744073744540127, Channel size: 39844059, backlog size: 22
-max_number: 18446744073749539064, Channel size: 45672337, backlog size: 22
-max_number: 18446744073754531403, Channel size: 52615282, backlog size: 21
-max_number: 18446744073759391298, Channel size: 57793433, backlog size: 22
-max_number: 18446744073764536089, Channel size: 62584016, backlog size: 22
-max_number: 18446744073769543447, Channel size: 67717313, backlog size: 22
-max_number: 18446744073774534673, Channel size: 73151474, backlog size: 23
-max_number: 18446744073779527392, Channel size: 78788656, backlog size: 23
-max_number: 18446744073784545318, Channel size: 84235580, backlog size: 20
-max_number: 18446744073789533179, Channel size: 89133757, backlog size: 22
-max_number: 18446744073794537988, Channel size: 95788173, backlog size: 23
-max_number: 18446744073799477863, Channel size: 101159371, backlog size: 22
-max_number: 18446744073804537435, Channel size: 106249631, backlog size: 23
-max_number: 18446744073809530512, Channel size: 112986603, backlog size: 23
-max_number: 18446744073814543490, Channel size: 117265113, backlog size: 23
-max_number: 18446744073819536785, Channel size: 122490558, backlog size: 23
-max_number: 18446744073824519280, Channel size: 127615380, backlog size: 23
-max_number: 18446744073829518381, Channel size: 131070060, backlog size: 22
-max_number: 18446744073834541590, Channel size: 136302517, backlog size: 23
-max_number: 18446744073839530692, Channel size: 140565391, backlog size: 23
-max_number: 18446744073844543338, Channel size: 145577450, backlog size: 22
-max_number: 18446744073849541893, Channel size: 149606953, backlog size: 22
-max_number: 18446744073854498740, Channel size: 155001844, backlog size: 23
+iteration: 0, time: 0, max_number: 18446744073709551616, channel size: 539, backlog size: 0
+iteration: 5000000, time: 1, max_number: 18446744073714546983, channel size: 86, backlog size: 9
+iteration: 10000000, time: 2, max_number: 18446744073719547235, channel size: 261, backlog size: 10
+iteration: 15000000, time: 3, max_number: 18446744073724545766, channel size: 19, backlog size: 9
+iteration: 20000000, time: 5, max_number: 18446744073729546996, channel size: 43, backlog size: 9
+iteration: 25000000, time: 6, max_number: 18446744073734547606, channel size: 244, backlog size: 9
+iteration: 30000000, time: 7, max_number: 18446744073739546263, channel size: 71, backlog size: 10
+iteration: 35000000, time: 8, max_number: 18446744073744544145, channel size: 54, backlog size: 9
+iteration: 40000000, time: 10, max_number: 18446744073749547348, channel size: 29, backlog size: 10
+iteration: 45000000, time: 11, max_number: 18446744073754546822, channel size: 87, backlog size: 9
+iteration: 50000000, time: 12, max_number: 18446744073759548142, channel size: 110, backlog size: 10
+iteration: 55000000, time: 14, max_number: 18446744073764541904, channel size: 9, backlog size: 10
+iteration: 60000000, time: 15, max_number: 18446744073769548652, channel size: 23, backlog size: 10
+iteration: 65000000, time: 16, max_number: 18446744073774547924, channel size: 8, backlog size: 10
+iteration: 70000000, time: 17, max_number: 18446744073779532760, channel size: 3278, backlog size: 9
+iteration: 75000000, time: 19, max_number: 18446744073784541399, channel size: 88, backlog size: 9
+iteration: 80000000, time: 20, max_number: 18446744073789549232, channel size: 127, backlog size: 10
+iteration: 85000000, time: 21, max_number: 18446744073794545781, channel size: 27, backlog size: 9
+iteration: 90000000, time: 22, max_number: 18446744073799543910, channel size: 26, backlog size: 10
+iteration: 95000000, time: 24, max_number: 18446744073804547892, channel size: 54, backlog size: 10
+iteration: 100000000, time: 25, max_number: 18446744073809543736, channel size: 54, backlog size: 9
+iteration: 105000000, time: 26, max_number: 18446744073814545090, channel size: 3, backlog size: 10
+iteration: 110000000, time: 28, max_number: 18446744073819545980, channel size: 52, backlog size: 10
+iteration: 115000000, time: 29, max_number: 18446744073824547178, channel size: 5, backlog size: 10
+iteration: 120000000, time: 30, max_number: 18446744073829546609, channel size: 2734, backlog size: 9
+iteration: 125000000, time: 31, max_number: 18446744073834551519, channel size: 8753, backlog size: 9
+iteration: 130000000, time: 33, max_number: 18446744073839541647, channel size: 152, backlog size: 9
+iteration: 135000000, time: 34, max_number: 18446744073844543344, channel size: 4410, backlog size: 10
