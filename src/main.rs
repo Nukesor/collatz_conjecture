@@ -23,7 +23,7 @@ fn main() -> Result<()> {
     // -> For instance, if the task for 10 completes, but 7, 8 and 9 haven't yet, these will be
     //      added to the backlog.
     //  In theory, there should never be more than `threadpool_count` elements in the backlog.
-    let mut backlog: HashSet<u128> = HashSet::new();
+    let mut backlog: Vec<u128> = Vec::new();
 
     let mut counter = 0;
     let mut highest_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
@@ -36,16 +36,19 @@ fn main() -> Result<()> {
         if number > highest_number {
             // Add all missing numbers that haven't been returned yet.
             for i in highest_number + 1..number {
-                backlog.insert(i);
+                backlog.push(i);
             }
 
             // Set the new number as the highest number.
             highest_number = number;
         } else {
             // The number should be in the backlog.
-            if !backlog.remove(&number) {
-                panic!("Got smaller number that isn't in backlog: {}", number);
-            };
+            for i in 0..backlog.len() {
+                if backlog[i] == number {
+                    backlog.remove(i);
+                    break;
+                }
+            }
         }
 
         // We only print stuff every X iterations, as printing is super slow.
