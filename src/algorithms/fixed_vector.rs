@@ -18,11 +18,11 @@ pub fn fixed_vector(receiver: Receiver<u128>) -> Result<()> {
     //  In theory, there should never be more than `threadpool_count` elements in the backlog.
     let mut backlog: Vec<u128> = vec![EMPTY_SLOT; THREAD_COUNT];
 
-    let mut counter = 0;
     let mut highest_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
     // The highest number that's connected in the sequence of natural numbers from `(0..number)`.
     let mut highest_sequential_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
 
+    let mut counter = 0;
     loop {
         let next_number = receiver.recv()?;
 

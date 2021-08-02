@@ -26,10 +26,10 @@ fn main() -> Result<()> {
     // Spawn the worker pool
     spawn_threads(counter, sender)?;
 
-    algorithms::fixed_vector(receiver)
+    //algorithms::fixed_vector(receiver)
     //algorithms::vector(receiver)
     //algorithms::hashset(receiver)
-    //algorithms::min_heap(receiver)
+    algorithms::min_heap(receiver)
 }
 
 /// Spin up twice as many threads as there are logical cores.
