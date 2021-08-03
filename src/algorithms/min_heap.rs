@@ -1,9 +1,10 @@
-use std::{cmp::Reverse, collections::BinaryHeap};
+use std::{cmp::Reverse, collections::BinaryHeap, time::Instant};
 
 use color_eyre::eyre::Result;
 use crossbeam::channel::Receiver;
+use num_format::{Locale, ToFormattedString};
 
-use crate::{BATCH_SIZE, DEFAULT_MAX_PROVEN_NUMBER};
+use crate::{BATCH_SIZE, DEFAULT_MAX_PROVEN_NUMBER, REPORTING_SIZE};
 
 #[allow(dead_code)]
 pub fn min_heap(receiver: Receiver<u128>) -> Result<()> {
@@ -17,6 +18,7 @@ pub fn min_heap(receiver: Receiver<u128>) -> Result<()> {
     let mut highest_sequential_number = DEFAULT_MAX_PROVEN_NUMBER - BATCH_SIZE;
 
     let mut counter = 0;
+    let start = Instant::now();
     loop {
         let number = receiver.recv()?;
         // Check if we got the next number in the sequence of natural numbers.
@@ -45,10 +47,11 @@ pub fn min_heap(receiver: Receiver<u128>) -> Result<()> {
 
         // We only print stuff every X iterations, as printing is super slow.
         // We also only update the highest_sequential_number during this interval.
-        if counter % (100_000_000 / BATCH_SIZE) == 0 {
+        if counter % (REPORTING_SIZE / BATCH_SIZE) == 0 {
             println!(
-                "Max_number: {}, Channel size: {}, backlog size: {}",
-                highest_sequential_number,
+                "Time: {}ms, Max number: {}, Channel size: {}, Backlog size: {}",
+                start.elapsed().as_secs().to_formatted_string(&Locale::en),
+                highest_sequential_number.to_formatted_string(&Locale::en),
                 receiver.len(),
                 backlog.len()
             );

@@ -2,8 +2,9 @@ use std::time::Instant;
 
 use color_eyre::eyre::Result;
 use crossbeam::channel::Receiver;
+use num_format::{Locale, ToFormattedString};
 
-use crate::{BATCH_SIZE, DEFAULT_MAX_PROVEN_NUMBER};
+use crate::{BATCH_SIZE, DEFAULT_MAX_PROVEN_NUMBER, REPORTING_SIZE};
 
 #[allow(dead_code)]
 pub fn vector(receiver: Receiver<u128>) -> Result<()> {
@@ -52,7 +53,7 @@ pub fn vector(receiver: Receiver<u128>) -> Result<()> {
 
         // We only print stuff every X iterations, as printing is super slow.
         // We also only update the highest_sequential_number during this interval.
-        if counter % (100_000_000 / BATCH_SIZE) == 0 {
+        if counter % (REPORTING_SIZE / BATCH_SIZE) == 0 {
             // If there's still a backlog, the highest sequential number must be the smallest
             // number in the backlog -1
             if let Some(number) = backlog.iter().next() {
@@ -62,10 +63,10 @@ pub fn vector(receiver: Receiver<u128>) -> Result<()> {
             }
 
             println!(
-                "Batch: {}, time: {}, max_number: {}, channel size: {}, backlog size: {}",
+                "Batch : {}, Time: {}ms, Max number: {}, Channel size: {}, Backlog size: {}",
                 counter,
-                start.elapsed().as_secs(),
-                highest_sequential_number,
+                start.elapsed().as_millis().to_formatted_string(&Locale::en),
+                highest_sequential_number.to_formatted_string(&Locale::en),
                 receiver.len(),
                 backlog.len()
             );

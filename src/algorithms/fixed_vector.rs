@@ -2,8 +2,9 @@ use std::time::Instant;
 
 use color_eyre::eyre::Result;
 use crossbeam::channel::Receiver;
+use num_format::{Locale, ToFormattedString};
 
-use crate::{BATCH_SIZE, DEFAULT_MAX_PROVEN_NUMBER, THREAD_COUNT};
+use crate::{BATCH_SIZE, DEFAULT_MAX_PROVEN_NUMBER, REPORTING_SIZE, THREAD_COUNT};
 
 /// We have to implement our own non-moving vector, since the backlog is by far the slowest part of
 /// the main thread. Without some kind of special datastructure, we're quickly accumulating a lot
@@ -70,7 +71,7 @@ pub fn fixed_vector(receiver: Receiver<u128>) -> Result<()> {
 
         // We only print stuff every X iterations, as printing is super slow.
         // We also only update the highest_sequential_number during this interval.
-        if counter % (100_000_000 / BATCH_SIZE) == 0 {
+        if counter % (REPORTING_SIZE / BATCH_SIZE) == 0 {
             // Find the smallest number in our backlog.
             // That number minus 1 is our last succesfully calculated value.
             backlog.sort();
@@ -82,10 +83,10 @@ pub fn fixed_vector(receiver: Receiver<u128>) -> Result<()> {
             }
 
             println!(
-                "Batch : {}, time: {}, max_number: {}, Channel size: {}, backlog size: {}",
+                "Batch : {}, Time: {}ms, Max number: {}, Channel size: {}, Backlog size: {}",
                 counter,
-                start.elapsed().as_secs(),
-                highest_sequential_number,
+                start.elapsed().as_millis().to_formatted_string(&Locale::en),
+                highest_sequential_number.to_formatted_string(&Locale::en),
                 receiver.len(),
                 backlog.len()
             );

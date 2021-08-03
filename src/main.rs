@@ -5,6 +5,7 @@ use atomic::Atomic;
 use atomic::Ordering::Relaxed;
 use color_eyre::eyre::Result;
 use crossbeam::channel::{unbounded, Sender};
+use num_format::{Locale, ToFormattedString};
 
 mod algorithms;
 
@@ -14,16 +15,25 @@ static DEFAULT_MAX_PROVEN_NUMBER: u128 = 2u128.pow(64);
 ///
 /// This is at the same time the amount of slots in the backlog.
 /// In theory, we'll never need more backlog slots than there are threads.
-static THREAD_COUNT: usize = 11;
+static THREAD_COUNT: usize = 12;
 
 /// The amount of numbers that will be processed by a thread in a single unit of work.
 /// This drastically reduces the amount of messages that need to be send via the mpsc channel.
 /// It also reduces the work the main thread has to do.
 static BATCH_SIZE: u128 = 10_000_000;
 
+/// At which interval of calculated numbers a new messages will be printed.
+static REPORTING_SIZE: u128 = 1_000_000_000;
+
 fn main() -> Result<()> {
-    println!("Starting at number: {}", DEFAULT_MAX_PROVEN_NUMBER);
-    println!("Batch size: {}", BATCH_SIZE);
+    println!(
+        "Starting at number: {}",
+        DEFAULT_MAX_PROVEN_NUMBER.to_formatted_string(&Locale::en)
+    );
+    println!(
+        "Batch size: {}",
+        BATCH_SIZE.to_formatted_string(&Locale::en)
+    );
 
     // A thread-safe atomic counter.
     // This counter is shared between all threads and used to get the next tasks.
