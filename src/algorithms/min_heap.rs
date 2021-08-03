@@ -3,7 +3,7 @@ use std::{cmp::Reverse, collections::BinaryHeap};
 use color_eyre::eyre::Result;
 use crossbeam::channel::Receiver;
 
-use crate::DEFAULT_MAX_PROVEN_NUMBER;
+use crate::{BATCH_SIZE, DEFAULT_MAX_PROVEN_NUMBER};
 
 #[allow(dead_code)]
 pub fn min_heap(receiver: Receiver<u128>) -> Result<()> {
@@ -14,13 +14,13 @@ pub fn min_heap(receiver: Receiver<u128>) -> Result<()> {
 
     // This is used to store the next highest natural number, that's connected to 1 via the
     // sequence of natural numbers.
-    let mut highest_sequential_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
+    let mut highest_sequential_number = DEFAULT_MAX_PROVEN_NUMBER - BATCH_SIZE;
 
     let mut counter = 0;
     loop {
         let number = receiver.recv()?;
         // Check if we got the next number in the sequence of natural numbers.
-        if number == highest_sequential_number + 1 {
+        if number == highest_sequential_number + BATCH_SIZE {
             highest_sequential_number = number;
             // Once we get the next number, check if we find the following numbers in our,
             // backlog as well.
@@ -29,7 +29,7 @@ pub fn min_heap(receiver: Receiver<u128>) -> Result<()> {
                 if let Some(number) = backlog.peek() {
                     // If the number checks out and is the next item in the sequence, we pop it
                     // and set it as the new highest number.
-                    if number.0 == highest_sequential_number + 1 {
+                    if number.0 == highest_sequential_number + BATCH_SIZE {
                         highest_sequential_number = backlog.pop().expect("We just peeked it").0;
                     } else {
                         // If it isn't, we just break and wait.
@@ -45,9 +45,9 @@ pub fn min_heap(receiver: Receiver<u128>) -> Result<()> {
 
         // We only print stuff every X iterations, as printing is super slow.
         // We also only update the highest_sequential_number during this interval.
-        if counter == 5_000_000 {
+        if counter % (100_000_000 / BATCH_SIZE) == 0 {
             println!(
-                "max_number: {}, Channel size: {}, backlog size: {}",
+                "Max_number: {}, Channel size: {}, backlog size: {}",
                 highest_sequential_number,
                 receiver.len(),
                 backlog.len()

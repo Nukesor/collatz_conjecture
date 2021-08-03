@@ -3,7 +3,7 @@ use std::time::Instant;
 use color_eyre::eyre::Result;
 use crossbeam::channel::Receiver;
 
-use crate::DEFAULT_MAX_PROVEN_NUMBER;
+use crate::{BATCH_SIZE, DEFAULT_MAX_PROVEN_NUMBER};
 
 #[allow(dead_code)]
 pub fn vector(receiver: Receiver<u128>) -> Result<()> {
@@ -13,36 +13,46 @@ pub fn vector(receiver: Receiver<u128>) -> Result<()> {
     //  In theory, there should never be more than `threadpool_count` elements in the backlog.
     let mut backlog: Vec<u128> = Vec::new();
 
-    let mut highest_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
+    let mut highest_number = DEFAULT_MAX_PROVEN_NUMBER - BATCH_SIZE;
     // The highest number that's connected in the sequence of natural numbers from `(0..number)`.
-    let mut highest_sequential_number = DEFAULT_MAX_PROVEN_NUMBER - 1;
+    let mut highest_sequential_number = DEFAULT_MAX_PROVEN_NUMBER;
 
     let mut counter = 0;
     let start = Instant::now();
     loop {
-        let number = receiver.recv()?;
+        let next_number = receiver.recv()?;
 
-        if number > highest_number {
+        if next_number > highest_number {
             // Add all missing numbers that haven't been returned yet.
-            for i in highest_number + 1..number {
-                backlog.push(i);
+            let mut missing = highest_number + BATCH_SIZE;
+            while missing < next_number {
+                backlog.push(missing);
+                missing += BATCH_SIZE;
             }
 
             // Set the new number as the highest number.
-            highest_number = number;
+            highest_number = next_number;
         } else {
             // The number should be in the backlog.
+            let mut found_in_backlog = false;
             for i in 0..backlog.len() {
-                if backlog[i] == number {
+                if backlog[i] == next_number {
                     backlog.remove(i);
+                    found_in_backlog = true;
                     break;
                 }
+            }
+            if !found_in_backlog {
+                panic!(
+                    "Couldn't find number {} in backlog {:?}",
+                    next_number, backlog
+                );
             }
         }
 
         // We only print stuff every X iterations, as printing is super slow.
         // We also only update the highest_sequential_number during this interval.
-        if counter % 5_000_000 == 0 {
+        if counter % (100_000_000 / BATCH_SIZE) == 0 {
             // If there's still a backlog, the highest sequential number must be the smallest
             // number in the backlog -1
             if let Some(number) = backlog.iter().next() {
@@ -52,7 +62,7 @@ pub fn vector(receiver: Receiver<u128>) -> Result<()> {
             }
 
             println!(
-                "iteration: {}, time: {}, max_number: {}, channel size: {}, backlog size: {}",
+                "Batch: {}, time: {}, max_number: {}, channel size: {}, backlog size: {}",
                 counter,
                 start.elapsed().as_secs(),
                 highest_sequential_number,

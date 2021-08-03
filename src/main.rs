@@ -16,7 +16,15 @@ static DEFAULT_MAX_PROVEN_NUMBER: u128 = 2u128.pow(64);
 /// In theory, we'll never need more backlog slots than there are threads.
 static THREAD_COUNT: usize = 11;
 
+/// The amount of numbers that will be processed by a thread in a single unit of work.
+/// This drastically reduces the amount of messages that need to be send via the mpsc channel.
+/// It also reduces the work the main thread has to do.
+static BATCH_SIZE: u128 = 10_000_000;
+
 fn main() -> Result<()> {
+    println!("Starting at number: {}", DEFAULT_MAX_PROVEN_NUMBER);
+    println!("Batch size: {}", BATCH_SIZE);
+
     // A thread-safe atomic counter.
     // This counter is shared between all threads and used to get the next tasks.
     let counter: Arc<Atomic<u128>> = Arc::new(Atomic::new(DEFAULT_MAX_PROVEN_NUMBER));
@@ -49,16 +57,19 @@ fn spawn_threads(counter: Arc<Atomic<u128>>, sender: Sender<u128>) -> Result<()>
 
 /// The main logic of the thread.
 /// Check for circles and print a message if one is found.
+///
+/// Each thread processes a batch of numbers before reporting back.
 fn thread_logic(_thread: usize, counter: Arc<Atomic<u128>>, sender: Sender<u128>) -> Result<()> {
     loop {
-        let next_number = counter.fetch_add(1, Relaxed);
-        let found_circle = find_circle(next_number);
+        let next_number = counter.fetch_add(BATCH_SIZE, Relaxed);
+        for i in 0..BATCH_SIZE {
+            let found_circle = find_circle(next_number + i);
 
-        if found_circle {
-            println!("Found circle for {}", next_number);
-        } else {
-            sender.send(next_number)?;
+            if found_circle {
+                println!("Found circle for {}", next_number);
+            }
         }
+        sender.send(next_number)?;
     }
 }
 

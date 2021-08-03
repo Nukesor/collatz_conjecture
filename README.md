@@ -104,3 +104,14 @@ However it was also `O(n)` for multiple items, which is neat.
 
 Removing items resulted in a linear scan `O(n)` with an `O(1)` deletion operation (insert `0`).
 In theory, this should have been a bit faster. In practice, there wasn't much of a difference.
+
+
+### Batch Sizes
+
+Having the suspicion, that sending each message takes up a lot of the perfomance, I introduced batches for each worker.
+And indeed, processing a few million numbers before reporting back turns out to be quite the performance boost.
+
+This sped up the amount of numbers on 11 thread from about 5 million to 150 million.
+Turns out, sending a lot of messages from many threads via an mpsc channel is quite expensive.
+
+This makes all previous updates pretty useless, but they were a fun problem to have nevertheless :D.
