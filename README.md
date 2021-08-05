@@ -6,6 +6,8 @@ This is a little side-project to get familiar with low-level thread worker-pools
 The goal of this implementation is to find circles in the `3n + 1` conjecture and thereby proof it wrong.
 The algorithm works under the premise, that all numbers to `2^68` [have already been checked](https://en.wikipedia.org/wiki/Collatz_conjecture#Experimental_evidence), which saves us quite a bit of work.
 
+The current (very naive) implementation checks about 150 million numbers per second with 12 threads on a i7-8700k.
+
 ## Run it
 
 This project expects the latest stable Rust version.
